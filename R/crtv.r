@@ -5,11 +5,19 @@ crtv.drtv = function (x, ...)
 	crtv (paste (x$year, "-", x$month, "-", x$day, " ",
 	x$hour, ":", x$minute, ":", x$second, sep=""), FALSE, ...)
 
-crtv.crtv = function (x, relative=FALSE, origin=getOption ("rtv.default.origin"),
-	unit=getOption ("rtv.default.unit"), ...)
+crtv.crtv = function (x, clone=FALSE, relative=FALSE,
+	origin=NULL, unit=NULL, ...)
 {	if (relative) origin = min (as.POSIXct (x), na.rm = TRUE)
-	if (unit == attr (x, "unit") && origin == attr (x, "origin") ) x
-	else crtv (drtv (x), relative=relative, origin=origin, unit=unit)
+	if (clone)
+	{	if (is.null (origin) ) origin = attr (x, "origin")
+		if (is.null (unit) ) unit = attr (x, "unit")
+	}
+	else
+	{	if (is.null (origin) ) origin = getOption ("rtv.default.origin")
+		if (is.null (unit) ) unit = getOption ("rtv.default.unit")
+	}
+	if (origin == attr (x, "origin") && unit == attr (x, "unit") ) x
+	else crtv (drtv (x), origin=origin, unit=unit)
 }
 
 crtv.Date = function (x, ...)
@@ -30,10 +38,10 @@ crtv.POSIXct = function (x, relative=FALSE, origin=getOption ("rtv.default.origi
 	else if (unit == "minute") implode.homotime (x, origin, 60)
 	else if (unit == "second") implode.homotime (x, origin, 1)
 	else stop ("unknown time unit")
-	crtv.default (y, origin, unit)
+	crtv.default (y, origin=origin, unit=unit)
 }
 
-crtv.character = function (x, date=TRUE, informat=default.format (date), ...)
+crtv.character = function (x, date=getOption ("rtv.read.date"), informat=timestring.format (date), ...)
 	crtv (strptime (x, informat, tz="GMT"), ...)
 
 crtv.default = function (x, origin=getOption ("rtv.default.origin"),

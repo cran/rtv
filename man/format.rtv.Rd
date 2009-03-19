@@ -1,19 +1,10 @@
 \name{format.rtv}
 \alias{format.rtv}
-\alias{explicit.format}
-\alias{default.format}
 \title{Formatting rtv Objects}
-\description{Functions for formatting rtv objects. Note that calling format.rtv (my.rtv.object) does not format rtv objects by default. Either set the option rtv.explicit.format = TRUE, or call explicit.format instead. Note there are further functions for formatting, see unit.string.}
-\usage{
-\method{format}{rtv}(x, \dots)
-explicit.format(x,
-    date = TRUE, outformat = default.format(date), \dots)
-default.format(date = TRUE)
-}
+\description{A format method for rtv objects. Note that by default nothing happens. There is an option to change this behaviour, refer to the package vignette. Alternatively use timestring.}
+\usage{\method{format}{rtv}(x, \dots)}
 \arguments{
 \item{x}{An rtv object.}
-\item{date}{Date format if true, date-time format otherwise, ignored if outformat provided.}
-\item{outformat}{Format string.}
-\item{\dots}{For format.rtv, used calling explicit.format. For explicit.format, ignored.}
+\item{\dots}{Arguments for timestring.}
 }
 

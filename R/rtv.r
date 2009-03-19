@@ -1,12 +1,9 @@
-rtv = function (...) drtv (...)
-
 is.rtv = function (x) inherits (x, "rtv")
-as.rtv = function (x) if (is.rtv (x) ) x else drtv (x)
 
 as.Date.rtv = function (x, ...) as.Date (as.POSIXlt (x) )
 as.POSIXct.rtv = function (x, ...) as.POSIXct (as.POSIXlt (x) )
 as.POSIXlt.rtv = function (x, ...)
-{	x = drtv (x)
+{	x = as.drtv (x)
 	tstr = paste (x$year, "-", x$month, "-", x$day, " ",
 		x$hour, ":", x$minute, ":", x$second, sep="")
 	strptime (tstr, "%Y-%m-%d %H:%M:%OS", tz="GMT")
@@ -29,11 +26,13 @@ length.rtv = function (x, ...)
 }
 
 sort.rtv = function (x, ...) timesweep (sort, x, ...)
-sample.rtv = function (x, ...) timesweep (sample, x, ...)
+sample.rtv = function (x, ...) timesweep (sample, x, ...) #not method
 mean.rtv = function (x, ...) timesweep (mean, x, ...)
 min.rtv = function (x, ...) timesweep (min, x, ...)
 max.rtv = function (x, ...) timesweep (max, x, ...)
 diff.rtv = function (x, ...) diff (as.numeric (x), ...)
+floor.rtv = function (x, ...) timesweep (floor, x, ...)
+ceiling.rtv = function (x, ...) timesweep (ceiling, x, ...)
 
 range.rtv = function (x, diff=FALSE, ...)
 {	y = timesweep (range, x, ...)
@@ -63,7 +62,7 @@ timesweep = function (f, x, ...)
 }
 
 rtv.incr = function (x1, x2, unit=attr (x1, "unit"))
-{	if (is.null (unit) ) unit = "day"
+{	if (is.null (unit) ) unit = getOption ("rtv.default.unit")
 	y = crtv (as.numeric (crtv (x1, unit=unit) ) + x2, unit=unit)
 	if (is.drtv (x1) ) drtv (y)
 	else crtv (y, unit=attr (x1, "unit"), origin=attr (x1, "origin") )
@@ -89,6 +88,5 @@ c.rtv = function (...)
 	else crtv (target, origin=attr (seed [[1]], "origin"), unit=attr (seed [[1]], "unit") )
 }
 
-print.rtv = function (x, date=getOption ("rtv.print.date"), ...)
-	print.default (format (x, date) )
+print.rtv = function (x, ...) print.default (format (x, ...) )
 

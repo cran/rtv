@@ -28,7 +28,7 @@ drtv.POSIXlt = function (x, ...)
 drtv.POSIXct = function (x, ...)
 	drtv (as.POSIXlt (x), ...)
 
-drtv.character = function (x, date=TRUE, informat=default.format (date), ...)
+drtv.character = function (x, date=getOption ("rtv.read.date"), informat=timestring.format (date), ...)
 	drtv (strptime (x, informat, tz="GMT"), ...)
 
 drtv.default = function (year=2000, month=1, day=1,
@@ -41,8 +41,8 @@ drtv.default = function (year=2000, month=1, day=1,
 	x = structure (as.list (x), class=c ("drtv", "rtv") )
 	if (round) x = round.drtv (x)
 	if (validate)
-	{	x$dow = date.to.dow (year, month, day)
-		x$doy = date.to.doy (year, month, day)
+	{	x$dow = date.to.dow (x$year, x$month, x$day)
+		x$doy = date.to.doy (x$year, x$month, x$day)
 	}
 	x
 }

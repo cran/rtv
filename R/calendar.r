@@ -1,7 +1,7 @@
 is.leap = function (year)
 {	x1 = strptime (paste (year, "/02/28/23", sep=""), "%Y/%m/%d/%H", tz="GMT")
 	x2 = strptime (paste (year, "/03/01/01", sep=""), "%Y/%m/%d/%H", tz="GMT")
-	(difftime (x2, x1, units="days") > 1)
+	(difftime (x2, x1, tz="GMT", units="days") > 1)
 }
 
 ndays.year = function (year)

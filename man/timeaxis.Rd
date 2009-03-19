@@ -1,12 +1,13 @@
 \name{timeaxis}
 \alias{timeaxis}
-\title{Create Formatted Time Axis for Custom Plots}
-\description{A formatted axis for custom plots. Wraps the side function.}
-\usage{timeaxis(side, x, n = 5, \dots)}
+\title{Formatted Time Axis for Custom Plots}
+\description{This creates a formatted time axis for custom plots. This function calls both axis and timestring. Hence to understand how to call this function, refer to axis or timestring.}
+\usage{timeaxis (side, x, n=5, date=getOption ("rtv.plot.date"), \dots)}
 \arguments{
 \item{side}{Side of the axis. See axis, for more info.}
 \item{x}{A crtv object. Must be crtv, not drtv.}
 \item{n}{Number of ticks.}
-\item{\dots}{Arguments for explicit.format.}
+\item{date}{Date or date-tod format.}
+\item{\dots}{Arguments for timestring.}
 }
 
