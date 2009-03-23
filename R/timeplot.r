@@ -21,7 +21,8 @@ timeplot.multicycle = function (x, y)
 }
 
 timeplot.ecdf = function (x, cu=NULL, ...)
-{	if (is.null (cu) )
+{	x = as.crtv (x)
+	if (is.null (cu) )
 	{	plot (ecdf (x), axes=FALSE, ...)
 		timebox (1:2, x, ...)
 	}
@@ -37,7 +38,8 @@ timeplot.dot = function (x, ...)
 }
 
 timeplot.group = function (g, x, cu=NULL, jitter=TRUE, ...)
-{	g = as.factor (g)
+{	x = as.crtv (x)
+	g = as.factor (g)
 	gg = levels (g)
 	ng = length (gg)
 	nx = length (x)
@@ -52,7 +54,8 @@ timeplot.group = function (g, x, cu=NULL, jitter=TRUE, ...)
 }
 
 timeplot.line = function (x, y, cu=NULL, sort=TRUE, ...)
-{	if (! is.null (cu) ) x = rtv.cp (x, cu)
+{	x = as.crtv (x)
+	if (! is.null (cu) ) x = rtv.cp (x, cu)
 	if (sort)
 	{	i = order (x)
 		x = x [i]
@@ -74,7 +77,8 @@ timebox = function (side, x, ...)
 }
 
 timeaxis = function (side, x, n=5, date=getOption ("rtv.plot.date"), ...)
-{	x = timeseq (range (x, na.rm=TRUE), n=n, origin=attr (x, "origin"), unit=attr (x, "unit") )
+{	x = as.crtv (x)
+	x = timeseq (range (x, na.rm=TRUE), n=n, origin=attr (x, "origin"), unit=attr (x, "unit") )
 	axis (side, x, timestring (x, date, ...) )
 }
 

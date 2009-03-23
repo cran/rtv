@@ -5,7 +5,7 @@
 \usage{timebox (side, x, \dots)}
 \arguments{
 \item{side}{The side, can have length one or two. The value side [1] indicates which side has the timeaxis. The value side [2] if exists, is a regular axis.}
-\item{x}{A crtv object. Must be crtv, not drtv.}
+\item{x}{An rtv object.}
 \item{\dots}{Arguments for timestring.}
 }
 

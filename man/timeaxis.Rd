@@ -5,7 +5,7 @@
 \usage{timeaxis (side, x, n=5, date=getOption ("rtv.plot.date"), \dots)}
 \arguments{
 \item{side}{Side of the axis. See axis, for more info.}
-\item{x}{A crtv object. Must be crtv, not drtv.}
+\item{x}{An rtv object.}
 \item{n}{Number of ticks.}
 \item{date}{Date or date-tod format.}
 \item{\dots}{Arguments for timestring.}

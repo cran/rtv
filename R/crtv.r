@@ -5,8 +5,7 @@ crtv.drtv = function (x, ...)
 	crtv (paste (x$year, "-", x$month, "-", x$day, " ",
 	x$hour, ":", x$minute, ":", x$second, sep=""), FALSE, ...)
 
-crtv.crtv = function (x, clone=FALSE, relative=FALSE,
-	origin=NULL, unit=NULL, ...)
+crtv.crtv = function (x, origin=NULL, unit=NULL, clone=FALSE, relative=FALSE, ...)
 {	if (relative) origin = min (as.POSIXct (x), na.rm = TRUE)
 	if (clone)
 	{	if (is.null (origin) ) origin = attr (x, "origin")
@@ -76,4 +75,5 @@ round.crtv = function (x, ...) timesweep (round, x, ...)
 	attributes (y) = attributes (x)
 	y
 }
+
 

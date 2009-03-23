@@ -9,6 +9,8 @@ as.POSIXlt.rtv = function (x, ...)
 	strptime (tstr, "%Y-%m-%d %H:%M:%OS", tz="GMT")
 }
 
+as.character.rtv = function (x, ...) timestring (x, ...)
+
 as.double.rtv = function (x, std = FALSE, ...)
 {	if (std) x = crtv (x)
 	else x = as.crtv (x)
@@ -88,5 +90,18 @@ c.rtv = function (...)
 	else crtv (target, origin=attr (seed [[1]], "origin"), unit=attr (seed [[1]], "unit") )
 }
 
-print.rtv = function (x, ...) print.default (format (x, ...) )
+print.rtv = function (x, ...)
+{	x = format (x, ...)
+	if (is.crtv (x) )
+	{	print (as.numeric (x) )
+		cat ("{origin=\"", format (attr (x, "origin") ), "\", unit=\"", attr (x, "unit"), "\"}\n", sep="")
+	}
+	else
+	{	if (is.drtv (x) )
+		{	class (x) = NULL
+			x = data.frame (x)	
+		}
+		print (x)
+	}
+}
 

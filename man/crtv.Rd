@@ -12,8 +12,8 @@
 \usage{
 crtv(\dots)
 \method{crtv}{drtv}(x, \dots)
-\method{crtv}{crtv}(x, clone=FALSE, relative=FALSE,
-    origin=NULL, unit=NULL, \dots)
+\method{crtv}{crtv}(x, origin=NULL, unit=NULL,
+    clone=FALSE, relative=FALSE, \dots)
 \method{crtv}{character}(x, date=getOption ("rtv.read.date"),
     informat=timestring.format (date), ...)
 \method{crtv}{Date}(x, \dots)
@@ -35,4 +35,5 @@ crtv(\dots)
 \item{informat}{The string format.}
 \item{\dots}{Arguments for other crtv constructors.}
 }
+
 
