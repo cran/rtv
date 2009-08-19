@@ -1,4 +1,4 @@
-%\VignetteIndexEntry{Random Time Variable Objects (rtv 0.2.2)}
+%\VignetteIndexEntry{Random Time Variables (rtv 0.3.0)}
 \documentclass {article}
 \usepackage {Sweave} 
 
@@ -27,14 +27,14 @@ par(mar=c(5.1, 4.1, 1.1, 2.1))))
 require (rtv)
 @
 
-\title {Random Time Variable Objects (rtv 0.2.2)}
+\title {Random Time Variables (rtv 0.3.0)}
 
-\author {Charlotte Maia \\ \textit {Business Statistician and Statistical Programmer}}
+\author {Miss Charlotte Maia \\ \textit {Statistician (Portfolio Management and Statistical Programming)}}
 \maketitle
 \thispagestyle {empty}
 
 \begin {abstract}
-The rtv package is designed for conveniently representing and manipulating realisations of random time variables, such as those often encountered in business and government datasets. Common examples include reading formatted time strings (e.g. ``2008-01-01 06:00:00'') and converting them to a continuous measure (or vice versa), and applying mathematical operations to realisations (e.g. the mean realisation). An object oriented paradigm is used, where realisations are represented by either (discrete) drtv objects, corresponding to values from a calendar and a clock, or (continuous) crtv objects, corresponding to values from a real number line augmented by origin and unit attributes. In the continuous case the unit can be either year, month, day, hour, minute, second or week. The package also supports calendar operations, time.frame objects, aggregation operations and exploratory plots.
+The rtv package is designed for conveniently representing and manipulating realisations of random time variables (what we can roughly describe as time data). Common examples include reading formatted time values (e.g. ``2008-01-01 06:00:00'') and converting them to a continuous measure (or vice versa), and applying mathematical operations to realisations (e.g. the mean realisation). An object oriented paradigm is used, where realisations are represented by either (discrete) drtv objects, corresponding to values from a calendar and a clock, or (continuous) crtv objects, corresponding to values from a real number line augmented by origin and unit attributes. In the continuous case the unit can be either year, month, day, hour, minute, second or week. The package also supports calendar operations, time.frame objects, aggregation operations and exploratory plots.
 \end {abstract}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -86,7 +86,9 @@ The crtv objects are are essentially a numeric vector with scalar origin and uni
 
 Not only can rtv objects be created from a variety of other objects, but rtv objects can also be created from other rtv objects. In the special case of creating crtv objects from other crtv objects we can change the origin or the unit. Often this is mathematically trivial. Changing the origin from 2000-01-01 to 2001-01-01 means subtracting 366 days from each realisation. Changing the unit from day to week, means dividing the realisations by seven. However changing the unit from day, hour, minute, second or week to year or month requires special consideration. The approach taken here, is that a period of one year, corresponds to the exactly the same month-day date one year apart regardless of the number of days involved. The same principle applies to months. This is discussed in more detail in the section on creating crtv objects.
 
-The package also contains functions to create time.frame objects (which extend data.frame objects), to aggregate over time and to produce exploratory plots. The user can create either a time.frame object or a regular data.frame object using crtv objects. The time.frame objects are currently preferred. The time.aggregate function, which is currently just a rough prototype and is not discussed in detail (yet), can compute summary statistics per time period. These functions should be discussed in more detail in the next release.
+Note, it may seem extremely unorthodox to describe time as ``discrete'' in the way used here, especially when the time values associated with a typical timeseries are also discrete, and that our notion allows fractional seconds. However the author believes that this notion of discrete time provides a elegant and striking contrast to the notion of continuous time used here. She also believes that while there are many other ways we could define discrete time, they don't usually require formal time objects, and can be sufficiently represented by integers. In the case of the time values associated with a timeseries, we can treat them as either an integer vector or as a drtv object. 
+
+The package also contains functions to create time.frame objects (which extend data.frame objects), to aggregate over time and to produce exploratory plots. The user can create either a time.frame object or a regular data.frame object using crtv objects. The time.aggregate function, which is currently just a rough prototype and is not discussed in detail (yet), can compute summary statistics per time period. These functions should be discussed in more detail in the next release.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Section
@@ -218,7 +220,7 @@ and
 	\item [$origin$] is the origin of the time realisation.
 	\item [$\textrm {n} _ \textrm {year}$] is the number of days in the given year.
 	\item [$\textrm {n} _ \textrm {month}$] is the number of days in the given month.
-	\item [$\bullet$] is shorthand for any object which can be mapped to the argument list \{year, month, day, hour, minute, second, dow, doy\}.
+	\item [$\bullet$] is shorthand for any object that can be mapped to the argument list \{year, month, day, hour, minute, second, dow, doy\}.
 \end {itemize}
 
 We can produce inverses for these functions however they are messy. The reader can refer to the explode functions in the drtv.r source file if interested.
@@ -499,5 +501,4 @@ dowstring (dow, nletters=NA)
 @
 
 \end{document}
-
 
