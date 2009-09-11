@@ -1,6 +1,6 @@
-%\VignetteIndexEntry{Random Time Variables (rtv 0.3.0)}
+%\VignetteIndexEntry{Random_Time_Variables_(rtv_0.3.1)}
 \documentclass {article}
-\usepackage {Sweave} 
+\usepackage {Sweave, color} 
 
 \setlength {\topmargin} {-1.5cm} 
 \setlength {\topskip} {0cm}     
@@ -9,6 +9,8 @@
 \setlength {\oddsidemargin} {-0.0cm} 
 \setlength {\evensidemargin} {-0.0cm} 
 \linespread {1.10}
+\definecolor {navy}{rgb}{0,0,0.45}
+\definecolor {pine}{rgb}{0,0.2,0}
 
 \DefineVerbatimEnvironment{Sinput}{Verbatim} {xleftmargin=2em}
 \DefineVerbatimEnvironment{Soutput}{Verbatim}{xleftmargin=2em}
@@ -24,12 +26,13 @@
 options(continue=" ")
 options(SweaveHooks=list(fig=function()
 par(mar=c(5.1, 4.1, 1.1, 2.1))))
+require (oosp)
 require (rtv)
 @
 
-\title {Random Time Variables (rtv 0.3.0)}
+\title {Random Time Variables (rtv 0.3.1)}
 
-\author {Miss Charlotte Maia \\ \textit {Statistician (Portfolio Management and Statistical Programming)}}
+\author {CHARLOTTE MAIA}
 \maketitle
 \thispagestyle {empty}
 
@@ -501,4 +504,6 @@ dowstring (dow, nletters=NA)
 @
 
 \end{document}
+
+
 
