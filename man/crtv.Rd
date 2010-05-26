@@ -7,33 +7,38 @@
 \alias{crtv.POSIXlt}
 \alias{crtv.POSIXct}
 \alias{crtv.default}
-\title{Continuous Random Time Variable Objects}
-\description{Functions for creating continuous random time variable, crtv, objects.}
+\alias{crtvs}
+\alias{crtvx}
+\alias{crtvc}
+\alias{seq.crtv}
+\alias{crtvcp}
+\title{crtv objects}
+\description{Functions for creating continuous (real-based) random time variable objects.}
 \usage{
 crtv(\dots)
-\method{crtv}{drtv}(x, \dots)
-\method{crtv}{crtv}(x, origin=NULL, unit=NULL,
-    clone=FALSE, relative=FALSE, \dots)
-\method{crtv}{character}(x, date=getOption ("rtv.read.date"),
-    informat=timestring.format (date), ...)
-\method{crtv}{Date}(x, \dots)
-\method{crtv}{POSIXlt}(x, \dots)
-\method{crtv}{POSIXct}(x, relative=FALSE,
-    origin=getOption ("rtv.default.origin"),
-    unit=getOption ("rtv.default.unit"), \dots)
-\method{crtv}{default}(x,
-    origin=getOption ("rtv.default.origin"),
-    unit=getOption ("rtv.default.unit"), \dots)
+\method{crtv}{drtv}(x, origin, unit, \dots)
+\method{crtv}{crtv}(x, origin, unit, \dots)
+\method{crtv}{character}(x, origin, unit, \dots, date=TRUE, hour=6, style)
+\method{crtv}{Date}(x, origin, unit, \dots, hour=6)
+\method{crtv}{POSIXlt}(x, origin, unit, \dots)
+\method{crtv}{POSIXct}(x, origin, unit, \dots)
+\method{crtv}{default}(x, origin, unit, \dots)
+crtvs (x, \dots)
+crtvx (x, \dots)
+crtvc (x, origin = x$origin, unit = x$unit)
+\method{seq}{crtv}(a, b, n, ...)
+crtvcp (x)
 }
 \arguments{
-\item{x}{A seed object.}
-\item{clone}{If origin and unit unspecified, use those from seed crtv object.}
-\item{relative}{If true, the origin will be min (x, na.rm=TRUE).}
-\item{origin}{The origin, ignored if relative is true.}
-\item{unit}{The unit.}
-\item{date}{Date or date-tod format. Ignored if informat provided.}
-\item{informat}{The string format.}
-\item{\dots}{Arguments for other crtv constructors.}
+\item{x}{.}
+\item{a}{.}
+\item{b}{.}
+\item{hour}{.}
+\item{origin}{.}
+\item{unit}{.}
+\item{date}{.}
+\item{style}{.}
+\item{n}{.}
+\item{\dots}{.}
 }
-
 

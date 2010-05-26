@@ -1,79 +1,117 @@
-crtv = function (...)
-	UseMethod ("crtv")
+crtv = function (...) UseMethod ("crtv")
 
-crtv.drtv = function (x, ...)
-	crtv (paste (x$year, "-", x$month, "-", x$day, " ",
-	x$hour, ":", x$minute, ":", x$second, sep=""), FALSE, ...)
-
-crtv.crtv = function (x, origin=NULL, unit=NULL, clone=FALSE, relative=FALSE, ...)
-{	if (relative) origin = min (as.POSIXct (x), na.rm = TRUE)
-	if (clone)
-	{	if (is.null (origin) ) origin = attr (x, "origin")
-		if (is.null (unit) ) unit = attr (x, "unit")
+crtv.drtv = function (x, origin, unit, ...)
+{	if (missing (origin) ) origin=getOption ("rtv.origin")
+	if (missing (unit) ) unit=getOption ("rtv.unit")
+	origin = drtv (origin)
+	if (unit == "month")
+	{	y = .implode.month (x) - .implode.month (origin)
+		crtv (unclass (y), origin=origin, unit=unit)
 	}
+	else if (unit == "year")
+	{	y = .implode.year (x) - .implode.year (origin)
+		crtv (unclass (y), origin=origin, unit=unit)
+	}
+	else crtv (as.POSIXct (x), origin, unit)
+}
+
+crtv.crtv = function (x, origin, unit, ...)
+{	if (.oreq (x$origin, origin) && x$unit == unit) x
+	else crtv (drtv (x), origin, unit)
+}
+
+crtv.Date = function (x, origin, unit, ..., hour=6)
+	crtv (drtv (x, hour=hour), origin, unit)
+
+crtv.POSIXlt = function (x, origin, unit, ...)
+	crtv (as.POSIXct (x, tz="GMT"), origin, unit)
+
+crtv.POSIXct = function (x, origin, unit, ...)
+{	if (missing (origin) ) origin=getOption ("rtv.origin")
+	if (missing (unit) ) unit=getOption ("rtv.unit")
+	origin = drtv (origin)
+	if (unit == "month" || unit == "year")
+		crtv (drtv (x), origin, unit)
 	else
-	{	if (is.null (origin) ) origin = getOption ("rtv.default.origin")
-		if (is.null (unit) ) unit = getOption ("rtv.default.unit")
+	{	k = as.POSIXct (origin)
+		y = if (unit == "week") .implode.homotime (x, k, 604800)
+		else if (unit == "day") .implode.homotime (x, k, 86400)
+		else if (unit == "hour") .implode.homotime (x, k, 3600)
+		else if (unit == "minute") .implode.homotime (x, k, 60)
+		else if (unit == "second") .implode.homotime (x, k, 1)
+		else stop ("unknown time unit")
+		crtv (unclass (y), origin=origin, unit=unit)
 	}
-	if (origin == attr (x, "origin") && unit == attr (x, "unit") ) x
-	else crtv (drtv (x), origin=origin, unit=unit)
 }
 
-crtv.Date = function (x, ...)
-	crtv (as.POSIXct (x), ...)
+crtv.character = function (x, origin, unit, ..., date=TRUE, hour=6, style)
+	crtv (drtv (x, date=date, hour=hour, style=style), origin, unit)
 
-crtv.POSIXlt = function (x, ...)
-	crtv (as.POSIXct (x), ...)
-
-crtv.POSIXct = function (x, relative=FALSE, origin=getOption ("rtv.default.origin"),
-	unit=getOption ("rtv.default.unit"), ...)
-{	if (relative) origin = min (x, na.rm = TRUE)
-	origin = as.POSIXct (origin)
-	y = if (unit == "year") implode.year (x) - implode.year (origin)
-	else if (unit == "month") implode.month (x) - implode.month (origin)
-	else if (unit == "week") implode.homotime (x, origin, 604800)
-	else if (unit == "day") implode.homotime (x, origin, 86400)
-	else if (unit == "hour") implode.homotime (x, origin, 3600)
-	else if (unit == "minute") implode.homotime (x, origin, 60)
-	else if (unit == "second") implode.homotime (x, origin, 1)
-	else stop ("unknown time unit")
-	crtv.default (y, origin=origin, unit=unit)
+crtv.default = function (x, origin, unit, ...)
+{	if (missing (origin) ) origin=getOption ("rtv.origin")
+	if (missing (unit) ) unit=getOption ("rtv.unit")
+	extend (REAL (x), c ("crtv", "rtv"), origin, unit)
 }
-
-crtv.character = function (x, date=getOption ("rtv.read.date"), informat=timestring.format (date), ...)
-	crtv (strptime (x, informat, tz="GMT"), ...)
-
-crtv.default = function (x, origin=getOption ("rtv.default.origin"),
-	unit=getOption ("rtv.default.unit"), ...)
-	structure (x, class=c ("crtv", "rtv"), "origin"=as.POSIXct (origin), "unit"=unit)
 
 is.crtv = function (x) inherits (x, "crtv")
-as.crtv = function (x) if (is.crtv (x) ) x else (crtv (x) )
 
-implode.homotime = function (x, origin, fac)
-	(as.numeric (as.POSIXct (x) ) - as.numeric (origin) ) / fac
+rep.crtv = function (x, times, ...) .timesweep (rep, x, times, ...)
+mean.crtv = function (x, ...) .timesweep (mean, x, ...)
+range.crtv = function (x, ...) .timesweep (range, x, ...)
+min.crtv = function (x, ...) .timesweep (min, x, ...)
+max.crtv = function (x, ...) .timesweep (max, x, ...)
+round.crtv = function (x, ...) .timesweep (round, x, ...)
+floor.crtv = function (x, ...) .timesweep (floor, x, ...)
+ceiling.crtv = function (x, ...) .timesweep (ceiling, x, ...)
 
-implode.year = function (x)
-{	v = drtv (x, FALSE)
-	dp = implode.day (v$hour, v$minute, v$second)
+seq.crtv = function (a, b, n, ...)
+{	if (is.crtv (a) && is.crtv (b) )
+	{	if (.oreq (a$origin, b$origin) && a$unit == b$unit)
+		{	x = seq (unclass (a), unclass (b), length=n)
+			attributes (x) = attributes (a)
+			x
+		}
+		else stop ("seq.crtv, only allowed if same origin and unit")
+	}
+	else stop ("seq.crtv requires two crtv objects")
+}
+
+"+.crtv" = function (a, b)
+{	if (missing (b) ) a
+	else if (is.crtv (a) && is.crtv (b) )
+	{	x = unclass (a) + unclass (b)
+		attributes (x) = attributes (a)
+		x
+	}
+	else if (is.crtv (a) ) .timesweep (`+`, a, b)
+	else .timesweep (`+`, b, a)
+}
+
+"-.crtv" = function (a, b) if (missing (b) ) -1 * a else a + -1 * b
+
+.implode.homotime = function (x, origin, fac)
+	(as.numeric (x) - as.numeric (origin) ) / fac
+
+.implode.year = function (v)
+{	dp = .implode.day (v$hour, v$minute, v$second)
 	v$year + (v$doy + dp - 1) / ndays.year (v$year) 
 }
 
-implode.month = function (x)
-{	v = drtv (x, FALSE)
-	dp = implode.day (v$hour, v$minute, v$second)
+.implode.month = function (v)
+{	dp = .implode.day (v$hour, v$minute, v$second)
 	12 * v$year + v$month + (v$day + dp - 1) / ndays.month (v$year, v$month)
 }
 
-implode.day = function (hour, minute, second)
+.implode.day = function (hour, minute, second)
 	hour / 24 + minute / 1440 + second / 86400
 
-round.crtv = function (x, ...) timesweep (round, x, ...)
-
-"[.crtv" = function (x, i)
-{	y = "[.numeric_version" (x, i)
+.timesweep = function (f, x, ...)
+{	y = f (unclass (x), ...)
 	attributes (y) = attributes (x)
 	y
 }
+
+.oreq = function (k1, k2) drtvf (k1) == drtvf (k2)
+
 
 

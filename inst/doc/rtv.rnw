@@ -1,507 +1,424 @@
-%\VignetteIndexEntry{Random_Time_Variables_(rtv_0.3.1)}
+%\VignetteIndexEntry{Random_Time_Variables}
 \documentclass {article}
-\usepackage {Sweave, color} 
-
-\setlength {\topmargin} {-1.5cm} 
-\setlength {\topskip} {0cm}     
-\setlength {\textheight} {22.5cm} 
-\setlength {\textwidth} {16.25cm}     
-\setlength {\oddsidemargin} {-0.0cm} 
-\setlength {\evensidemargin} {-0.0cm} 
-\linespread {1.10}
-\definecolor {navy}{rgb}{0,0,0.45}
-\definecolor {pine}{rgb}{0,0.2,0}
-
-\DefineVerbatimEnvironment{Sinput}{Verbatim} {xleftmargin=2em}
-\DefineVerbatimEnvironment{Soutput}{Verbatim}{xleftmargin=2em}
-\DefineVerbatimEnvironment{Scode}{Verbatim}{xleftmargin=2em}
-\fvset{listparameters={\setlength{\topsep}{0pt}}}
-\renewenvironment{Schunk}{\vspace{\topsep}}{\vspace{\topsep}}
-
+\usepackage {maia2}
 \SweaveOpts{keep.source=TRUE}
-
+\SweaveOpts{prefix.string=tmp}
 \begin{document}
 
 <<echo=false>>=
 options(continue=" ")
 options(SweaveHooks=list(fig=function()
-par(mar=c(5.1, 4.1, 1.1, 2.1))))
-require (oosp)
-require (rtv)
+par(mar=c(2, 4, 0.5, 4),las=1,cex=0.75)
+))
+library (rtv)
 @
 
-\title {Random Time Variables (rtv 0.3.1)}
+\mtitle {rtv}{0.4.0}{Random Time Variables}
 
-\author {CHARLOTTE MAIA}
-\maketitle
-\thispagestyle {empty}
-
-\begin {abstract}
-The rtv package is designed for conveniently representing and manipulating realisations of random time variables (what we can roughly describe as time data). Common examples include reading formatted time values (e.g. ``2008-01-01 06:00:00'') and converting them to a continuous measure (or vice versa), and applying mathematical operations to realisations (e.g. the mean realisation). An object oriented paradigm is used, where realisations are represented by either (discrete) drtv objects, corresponding to values from a calendar and a clock, or (continuous) crtv objects, corresponding to values from a real number line augmented by origin and unit attributes. In the continuous case the unit can be either year, month, day, hour, minute, second or week. The package also supports calendar operations, time.frame objects, aggregation operations and exploratory plots.
-\end {abstract}
+\mabstract{This vignette, introduces the rtv package, an R package for conveniently representing, manipulating and visualising time data. Here, time is regarded as a random variable, and rtv objects are used to represent realisations of that random variable. This is particularly useful for modelling change points, irregular timeseries and failure events. Here, rtv objects (which are defined by an abstract class and two subclasses) are similar to R's POSIXt objects. However rtv objects use/allow: (1) strong constructor overloading; (2) continuous representations of time, with user-specified origins and units (i.e. the number of days, weeks or years, since some reference event, possibly  the first event in series of events); and (3) weaker formatting.}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Section
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section {Introduction}
+\msec {Introduction}
 
-The rtv package is a package for working with realisations of random time variables. Roughly speaking we can regard such realisations as time data. e.g. A list of dates or a list of so called ``date-times'' (a term which we shall not use again). Such a list could be in the form of human-readable formatted time strings, real numbers representing the number of days or seconds since some origin, or a list of component lists, one for year, month, \ldots, second. Such a list could represent time values that are uniformly spaced, as in a typical timeseries, or irregularly spaced, possibly even with double-ups, as in typical transactional data.
+The rtv package is designed for conveniently representing, manipulating and visualising time data. Perhaps the representation of time data is the most important, as it influences our ability interpret the data itself, as well as our ability to manipulate and visualise data. There are different ways that we can represent time data, and it makes sense to represent our data in a way that's convenient, given the nature and purpose of our data.
+For modelling purposes, most time variables (and time values) can be classified into three overlapping sets:
+\begin {itemize}
+	\item \textbf {Timestamps and Formatted Text} \\[0.14cm] Whilst there are different ways of representing timestamps, they're generally presented to the user as formatted text (e.g. ``2004-04-18 10:05:27''). In general, timestamps contain both the date and the time of day, hence they tell us exactly when something happened.
 
-R already contains the POSIXlt and POSIXct classes (which are actually used by the rtv package) and can be used for this sort of data. However these are designed for system programmers, not statisticians or data analysts. The rtv package is based first and foremost on the principle that time (can) be a random variable. (We are not excluding other possible definitions of time, only emphasizing one that this one is particularly important). We can describe such a random variable as a random time variable, and time data (roughly speaking) as time realisations.
+	\item \textbf {Timeseries} \\[0.14cm] In principle, a timeseries represents a series of time values, where each time value maps to some response value. Whilst many timeseries models partly ignore time values by regarding them as natural numbers, denoting the ith response or error value, time values are important for interpreting models in practice. They are also important for modelling irregular timeseries. 
 
-Time realisations are common in real world datasets, especially in datasets extracted from business and government databases. Often raw data will be expressed as formatted time strings (e.g. ``2008-01-01 06:00:00'') or in some other format that is difficult to analyse. This means that raw time data often must first be processed prior to statistical modelling. Depending on the data and the type of model required this can be a very time consuming and very error prone task.
+	\item \textbf {Waiting Times} \\[0.14cm] With waiting times, often we are interested in expected waiting times, expected incidence rates, or perhaps the probability that a certain event will happen within a certain time period.
+\end {itemize}
 
-We need to discuss time in more detail. It is first necessary to define a time unit event. We define a time unit event to be any of the events \{year, month, day, hour, minute, second, week\}. A common operation is counting the number of time unit events that occur between two instants. Here it is assumed that such a count is for a single type of time unit event only (e.g. number of days or number of seconds, but not number of days and seconds) and that such a count can be fractional.
+\noindent Reiterating, these sets overlap. An industrial dataset, may contain timestamps (as formatted text) and it may be of interest to use that dataset to compute change points or failure rates. This requires us to transform formatted text values into numerical values. Similar transformations may be required for timeseries modelling (especially for irregular timeseries). Plus it may be necessary to transform numerical values back to formatted text values so that we can interpret our model.
 
-The count forms our most basic definition of time, the number of some time unit events that occur between two instants. However, in many situations it is easier to work with a representation based on combining values from a Gregorian calendar and a 24 hour clock. In either case, if we take all possible values that such time can take, then we could describe this set of time values as a time axis or a time sample space.
+Given that the representation of time data is very important, that there are these different sets of time variables, and the need to transform back and forth between textual and numeric variables, the rtv package seeks to represent time variables in a way that that generalises all these time variables and simplifies the transformation process.
 
-Now we can define a random time variable as a random variable whose sample space is, intuitively, a time sample space. We can also describe realisations of a random time variable as time realisations.
+In order to make this generalisation, time variables are generalised at two levels. Firstly, we use objects (in the computer science sense) to represent time values, something which is discussed in the next section. Secondly, we use random variables to model time.
 
-This package does not represent random time variables directly, but rather realisations of random time variables. However paraphrasing a previous statement, the notion that time is a random variable is very important.
+By regarding time as a random variable, we have a mathematical model that allows us to model all the time variables presented here. However, it's not sufficient to regard time as just any random variable. There are special issues associated with time, in particular time has relatively complex units, plus a tendency for cycles to appear in functions of time.
 
-For users of R, the obvious tools are the Date, POSIXlt and POSIXct classes. There are also a number of additional packages for working with timeseries data, however these additional packages generally contradict the notion that time is a random variable, so are not discussed further.
+A random time variable, requires a random variable whose sample space and whose realisations, are special time numbers, that address those special issues. This is difficult to achieve using enumerations or real numbers, however it's clearly attainable if we use objects, which is part of justification for using objects.
 
-The POSIX time classes in R, are very powerful, and with a little expertise can be used to perform most operations that one is likely to require. However, they are (in my opinion) counter-intuitive and there are also several nuisances including:
-\begin {enumerate}
-	\item A lack constructors (necessary for a clean object oriented design). Objects can be created by coercing another object or calling strptime.
-	\item Sensitivity to timezone. This is generally redundant in statistical modelling and can cause unexpected results.
-	\item With POSIXct objects, time is expressed as the number of seconds since ``1970-01-01 00:00:00'', although by default output is formatted. This is neither intuitive nor convenient for mathematical purposes.
-	\item It is not directly possible to compute the number of years or months that have occurred between two instants (noting that yearly cycles are common in many contexts).
-\end {enumerate}
-
-The main goal of the rtv package is to provide a set of tools for working with time realisations, which are intuitive and convenient to a statistician. As mentioned above the POSIX time classes in R are very powerful and hence many parts of the rtv package are built on top of these, although in general, they are hidden from the user.
-
-Additionally, the rtv package has the following goals:
-\begin {enumerate}
-	\item Conveniently represent time realisations. This means either a combination of values from a Gregorian calendar and a 24 hour clock (discrete time), or values from a real number line representing the number of time unit events between two instants, augmented by origin and unit attributes (continuous time). The origin represents the time at which the first instant occurred (on a separate standard time axis) and the unit can be any time unit event as defined above.
-	\item All time is treated as GMT time. This ensures that (in theory) the identity $x + 1 \textrm { day} = x + 24 \textrm { hours}$ is always true, for any valid time realisation $x$.
-	\item Time realisations should be represented using an object oriented paradigm.
-	\item There should be a large number of straight forward constructors for creating realisation objects from a variety of seed objects.
-	\item In general, mathematical operations applied to realisation objects should also return realisation objects.
-	\item By default time output should have minimal formatting if any.
-\end {enumerate}
-
-The realisation objects described above are implemented as rtv objects (random time variable objects). An rtv object is either a drtv object (discrete random time variable object) or a crtv object (continuous random time variable object).
-
-The drtv objects are fairly trivial (and have a similar structure to POSIXlt objects). Objects contain a list of eight equal length numeric vectors (seven of which are in principle integers). The first six correspond to year (any integer value), month (1-12), day (1-31), hour (0-23), minute (0-59) and second (0-59). The last two are the day of the week (1:Monday-7:Sunday) and the day of the year (1-366).
-
-The crtv objects are are essentially a numeric vector with scalar origin and unit attributes. The origin attribute is a POSIXct object or any object that can be coerced to a POSIXct object (noting that this might be changed to a crtv object in a later version of the package). The unit attribute is a character whose value is the name of any time unit event.
-
-Not only can rtv objects be created from a variety of other objects, but rtv objects can also be created from other rtv objects. In the special case of creating crtv objects from other crtv objects we can change the origin or the unit. Often this is mathematically trivial. Changing the origin from 2000-01-01 to 2001-01-01 means subtracting 366 days from each realisation. Changing the unit from day to week, means dividing the realisations by seven. However changing the unit from day, hour, minute, second or week to year or month requires special consideration. The approach taken here, is that a period of one year, corresponds to the exactly the same month-day date one year apart regardless of the number of days involved. The same principle applies to months. This is discussed in more detail in the section on creating crtv objects.
-
-Note, it may seem extremely unorthodox to describe time as ``discrete'' in the way used here, especially when the time values associated with a typical timeseries are also discrete, and that our notion allows fractional seconds. However the author believes that this notion of discrete time provides a elegant and striking contrast to the notion of continuous time used here. She also believes that while there are many other ways we could define discrete time, they don't usually require formal time objects, and can be sufficiently represented by integers. In the case of the time values associated with a timeseries, we can treat them as either an integer vector or as a drtv object. 
-
-The package also contains functions to create time.frame objects (which extend data.frame objects), to aggregate over time and to produce exploratory plots. The user can create either a time.frame object or a regular data.frame object using crtv objects. The time.aggregate function, which is currently just a rough prototype and is not discussed in detail (yet), can compute summary statistics per time period. These functions should be discussed in more detail in the next release.
+In addition to their generality, there are further benefits to modelling time as random variables. Many important processes involve events that happen at random points in time. One of the major goals of this package, is to support modelling such processes.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Section
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section {Creating and Formatting drtv Objects}
-Possibly the most practical use of the rtv package is reading formatted time strings. In the following example a character vector of formatted time strings is created, then a drtv object is created using the character vector as a seed object.
+\msec {Modelling Time as Objects}
 
+As mentioned earlier we need objects to represent time. This isn't a new idea (especially not in R). Many readers will be familiar with R's POSIXt objects. These are defined by the following classes (noting the square brackets in POSIXct attribute list imply itself):
+
+\begin {center}
+	\includegraphics {uml1.pdf}
+\end {center}
+
+\noindent These are powerful classes (and conform to several ISO standards), however, in the authors opinion they have the following problems:
+\begin {enumerate}
+	\item Both the POSIXlt and POSIXct classes have very obscure constructors. A POSIXlt object can be created by with as.POSIXlt or strptime. A POSIXct object can be created with as.POSIXct or ISOdatetime.
+	\item In the POSIXlt class, firstly ``year'' represents the number of years since since 1900, so this year (2010) is year 110, secondly some (not all) of the enumerations start at zero (rather than one). This is counter-intuitive in business and most other application areas. e.g. Month zero is January and month eleven is December. 
+	\item In the POSIXct class, time is represented by the number of seconds since ``1970-01-01 00:00:00''. Whilst by default, output is formatted, this representation is also counter-intuitive, plus it's inconvenient for modelling waiting times.
+	\item There's a function called difftime that computes the difference between two time values, where the units (e.g. days or weeks) can be specified by the user.  However, the function doesn't allow months or years.
+	\item All POSIXt objects are sensitive to timezones in one way or another, noting that for most modelling purposes, we don't need timezones, plus timezones can cause unexpected results.
+	\item Printing POSIXt objects tends to produce highly formatted text, which obscures the representation of time.
+\end {enumerate}
+
+\noindent In order to address these problems, plus better support modelling time as a random variable, the rtv package implements rtv objects. These are similar to the POSIXt objects (noting in some cases they even make use of them). Here, we have the following classes:
+
+\begin {center}
+	\includegraphics {uml2.pdf}
+\end {center}
+
+\noindent There are three classes, an abstract rtv class, a drtv class that roughly speaking extends rtv and list, and a crtv class that roughly speaking extends rtv and numeric. The diagram only shows the rtv classes. Noting that there are some intermediate classes that add functionality to the list and numeric classes, which we won't discuss.
+
+In the drtv class, the ``d'' roughly implies discrete. The drtv class regards time as discrete and mostly-recursive units (i.e. a year is divided into months, which is divided into days, which is divided into hours, etc). This reflects the common everyday use of time. In the crtv class, the ``c'' roughly implies continuous. The crtv class regards time as a continuous (and potentially fractional) count of some time unit (e.g. days or years) that have happened since some reference event.
+
+In response to the problems identified above, rtv objects:
+\begin {enumerate}
+	\item Have obvious constructors, we call drtv or crtv to create an object. Noting the classes make strong use of constructor overloading.
+	\item In the drtv class, discrete time units have been designed to reflect their common use. Noting that dow is the day of the week, where 1 maps to Monday and 7 maps to Sunday.
+	\item In the crtv class, we have great flexibility, which we will discuss further.
+	\item In principle, there's no timezones. This ensures that the identity $x + 1 \textrm { day} = x + 24 \textrm { hours}$ is always true.
+	\item Global options control formatting. By default, formatting is minimal.
+\end {enumerate}
+
+\noindent Constructors for crtv objects, allow us to provide an origin and unit attribute. The origin is an arbitrary time value (as a drtv object, or anything that can be used to create a drtv object), and defaults to the equivalent of ``2000-01-01 06:00:00''. The unit is one of \{year, month, day, hour, minute, second or week\}, where day is the default. Using the default origin and unit, a value of 10 represents ``2000-01-11 06:00:00'', and can be interpreted as 10 days since the origin. Special consideration, has been given to using months and years as units. They are designed to accurately reflect the heterogeneous nature of the units.
+
+A number of global options are mentioned in appendix A, plus the formulation of months and years in appendix B.
+
+Whilst rtv objects are designed to represent both date and time of day values, we can also use them to represent date only values. For date only values, there's still information on the time of day, however we can partly ignore it.
+
+We can't completely ignore it, because it can influence truncation and rounding operations (which are also subject to floating point errors). Noting that truncation is relatively common (i.e. formatting a time value to show the date only). The default behaviour of rtv constructors, when dealing with dates, is to set the time of day, to 6am.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Section
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\msec {Creating drtv Objects}
+
+We can create drtv objects, from a variety of seed objects. Following is a list of drtv constructors (don't take too much notice of the word ``methods''), along with the function signature for drtv.character (which we are going to focus on):
+<<>>=
+methods (drtv)
+args (drtv.character)
+@
+
+\noindent We can create a drtv object (from a text seed aka R character vector), using the default arguments as follows:
 <<>>=
 seed = c ("2008-01-01", "2008-02-01", "2008-03-01", "2008-04-01")
 x = drtv (seed)
-class (x)
 x
 @
 
-First note the class attribute. A drtv object is also an rtv object. The same principle applies to crtv objects discussed in the next section.
-
-Note that we can produce a formatted version.
-
+\noindent By default, printing a drtv (or crtv) object, doesn't use a lot of formatting. This is intentional, and is intended to expose the structure of the object, and (hopefully) make them simple and intuitive to use. We can produce a formatted version, using drtvf. Noting drtvf, stands for create a drtv object and format it.
 <<>>=
-timestring (x)
+drtvf (x)
 @
 
-Or better.
+\noindent As mentioned earlier a drtv object extends both rtv and list. We can access the object's attributes like a list, however in many ways they have been designed to feel like vectors:
 <<>>=
-timestring (x, date=TRUE)
+x$day
+length (x)
+x [1]
 @
 
-We can also extract individual components.
+\noindent To create a drtv (date-based) object, using midnight rather than 6am, we can use the function drtvs (which simply calls the same constructor, using the argument hour=0). Noting that the ``s'' stands for simple.
 <<>>=
-x$dow
+drtvs (seed)
 @
 
-This can also be formatted (more on this later).
+\noindent We can also create a drtv object, using both dates and times of the day, using the drtvx function (which also calls the same constructor, however using the argument date=FALSE). Noting that the ``x'' stands for extended.
 <<>>=
-dowstring (x$dow)
-@
-
-We can also have a date-tod format.
-<<>>=
-seed = c ("2010-01-01 12:15:00", "2010-01-01 12:16:00",
-	"2010-01-01 12:17:00", "2010-01-01 12:18:00")
-x = drtv (seed, date=FALSE)
+seedx = c ("2010-06-08 14:45:00", "2010-06-08 04:22:00",
+	"2010-06-08 22:45:00", "2010-06-08 02:05:00")
+x = drtvx (seedx)
 x
-timestring (x)
 @
 
-Or a format of our choice, using the same syntax used by strptime (refer to the help file for this function if necessary)
-
+\noindent To produce a formatted representation of the object, including all the information, we need an extra argument for drtvf:
 <<>>=
-seed = c ("2010:01:01-12:15:00", "2010:01:01-12:16:00",
-	"2010:01:01-12:17:00", "2010:01:01-12:18:00")
-tf = "%Y:%m:%d-%H:%M:%OS"
-x = drtv (seed, informat=tf)
-x
-timestring (x, outformat=tf)
+drtvf (x, date=FALSE)
 @
 
-The drtv objects can also be created from rtv, Date, POSIXlt and POSIXct objects, as well as offering a default constructor. Refer to the help file for drtv for more information.
+\noindent If this seems like too much work, we can change global options.
+<<>>=
+rtvo.format (TRUE)
+rtvo.date (FALSE)
+x
+rtvo.reset ()
+@
 
-Note that if the user does not wish to call timestring there are options to make formatting automatic. The user may also need to set an option which controls whether or not the date or date-tod form is used. There are also options to change the default format used for the date only string and the date-tod string. Options are discussed later.
+\noindent Furthermore, we can specify a style argument, this is the same as the the format argument used by strptime. If style is provided, both the date and hour arguments are ignored.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Section
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section {Creating and Interconverting crtv Objects}
+\msec {Creating crtv Objects}
 
-We can create and format crtv objects in an almost identical way to drtv objects.
+We create crtv objects, in a similar way to drtv objects. We also have a variety of constructors, including a constructor for text seeds. We have crtvs and crtvx functions similar to the drtvs and drtvx functions, plus still use drtvf to force formatting.
+<<>>=
+methods (crtv)
+args (drtv.character)
+@
 
 <<>>=
-seed = c ("2008-01-01", "2008-02-01", "2008-03-01", "2008-04-01")
 x = crtv (seed)
+drtvf (x)
 x
-timestring (x)
 @
 
-The key difference is that we can specify origin and unit attributes (the defaults are 2000-01-01 00:00:00 and day).
-
+\noindent Furthermore, all the crtv constructors, allow us to specify a seed (first argument), an origin (second argument) and a unit (third argument). Note that the origin, can be any value that is a valid drtv seed. Also note, that where a text seed is used (as in the following example) it will assume a date only value, using a 6am default hour. As a general rule, when creating crtv objects using crtvx, the origin is best specified using either drtvs or drtvx.
 <<>>=
-seed = c ("2008-01-01", "2008-01-08", "2008-01-15", "2008-01-22")
-crtv (seed, origin=crtv ("2008-01-01"), unit="week")
+#date only
+crtv (seed, "2008-01-01", "hour")
 @
 
-Often we wish to use the minimum time realisation as the origin. The above call can be written more succinctly.
-
 <<>>=
-seed = c ("2008-01-01", "2008-01-08", "2008-01-15", "2008-01-22")
-crtv (seed, relative=TRUE, unit="week")
+#date and time of day - origin at midnight
+crtvx (seedx, drtvs ("2008-01-01"), "hour")
 @
 
-Assuming that we can create a drtv object from our seed object then we can compute number of years using the following:
-
-\[
-	\textrm {f} _ \textrm {year} (x_i) -
-		\textrm {f} _ \textrm {year} (origin)
-\]
-
-\[
-	\textrm {f} _ \textrm {year} (\bullet) =
-		year +
-		\frac {doy + \textrm {f} _ \textrm {day} (\bullet) - 1}
-		{\textrm {n} _ \textrm {year} (year)}
-\]
-
-As well as number of months using the following:
-
-\[	\textrm {f} _ \textrm {month} (x_i) -
-		\textrm {f} _ \textrm {month} (origin)
-\]
-
-\[
-	\textrm {f} _ \textrm {month} (\bullet) =
-		12 \thinspace year + month +
-		\frac {day + \textrm {f} _ \textrm {day} (\bullet) - 1}
-		{\textrm {n} _ \textrm {month} (month)}
-\]
-
-Where
-\[
-	\textrm {f} _ \textrm {day} (\bullet) =
-		\frac {hour}{24} +
-		\frac {minute}{1440} +
-		\frac {second}{86400}
-\]
-
-and
-
-\begin {itemize}
-	\item [$x_i$] is a single time realisation.
-	\item [$origin$] is the origin of the time realisation.
-	\item [$\textrm {n} _ \textrm {year}$] is the number of days in the given year.
-	\item [$\textrm {n} _ \textrm {month}$] is the number of days in the given month.
-	\item [$\bullet$] is shorthand for any object that can be mapped to the argument list \{year, month, day, hour, minute, second, dow, doy\}.
-\end {itemize}
-
-We can produce inverses for these functions however they are messy. The reader can refer to the explode functions in the drtv.r source file if interested.
-
-Based on these formulae we can create a crtv object with year or month as the unit (noting the effect of leap year on the example below).
 <<>>=
-seed = c ("2000-01-01", "2000-07-02", "2001-01-01", "2001-07-02")
-crtv (seed, unit="year")
+#date and time of day - origin = first recorded event
+crtvx (seedx, drtvx (seedx [1]), "hour")
 @
 
-Any rtv object can be tested and coerced to other objects. See the helps files for is.rtv and as.rtv for full details. A basic example is as.numeric (which is implemented as as.double.rtv). This strips a crtv object of its attributes leaving a numeric type. 
-
 <<>>=
-seed = c ("2000-01-01", "2000-07-02", "2001-01-01", "2001-07-02")
-x = crtv (seed, unit="year")
-as.numeric (x)
+#date and time of day - origin = first occurring event
+crtvx (seedx, min (crtvx (seedx) ), "hour")
 @
 
-We may be interested in the opposite operation. Creating a crtv object from a numeric vector. This is accomplished using the default crtv constructor. 
-
+\noindent Sometimes, we may wish to create a crtv object representing a sequence of values (not random as such, however still useful):
 <<>>=
-v = c (0, 0.5, 1, 1.49863)
-x = crtv (v, unit="year")
-timestring (x)
+rng = range (x)
+seq (rng [1], rng [2], 10)
 @
 
-Notice the error in the fourth realisation above. This is due to the round off error. Using greater precision we can avoid this, although errors are still likely when dealing with fractional seconds.
-
+\noindent Note that we can extract the origin and unit attributes.
 <<>>=
-x = crtv ("2001-07-02", unit="year")
-v = as.numeric (x)
-v
-format (v, digits=16)
-timestring (crtv (v, unit="year") )
-@
-
-As with formatting, the default origin and default unit can be changed by setting options. Such a call should be performed prior to any other rtv calls.
-
-Now we are in a position to interconvert between discrete and continuous representations of time.
-<<>>=
-seed = c ("2008-01-01", "2008-02-01", "2008-03-01", "2008-04-01")
-discrete.time = drtv (seed)
-discrete.time
-continuous.time = crtv (discrete.time)
-continuous.time
-discrete.time = drtv (continuous.time)
-timestring (discrete.time)
-@
-
-We are also in a position to change origins or units.
-<<>>=
-seed = c ("2008-01-01", "2008-01-02", "2008-01-03", "2008-01-04")
-x = crtv (seed, relative=TRUE)
-as.numeric (x)
-y = crtv (x, unit="hour", clone=TRUE)
-as.numeric (y)
+x$origin
+x$unit
 @
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Section
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section {Mathematical Operations on rtv Objects}
+\msec {Univariate Distributions}
 
-Most of the examples in this section are trivial. The important point to take note of, is that in general a function of an rtv object returns an rtv object. If the argument is a drtv object, then a drtv object is returned. If the argument is a crtv object, then a crtv object is returned. Note that some functions will convert drtv objects to crtv objects and then convert the result back to a drtv object. In these situations the default origin and default unit many effect the results.
-
-Lets say we have the following drtv object:
-
-<<>>=
-seed = paste ("2000-01-", 1:20, sep="")
-x = crtv (seed)
-timestring (x)
+Lets say we have a random time variable with realisations $\mathbf {x}$, corresponding to random events from the beginning of 2007 to the middle of 2008.
+<<echo=false>>=
+x1 = c (1, 2, 3, 3, 4, 4, 5, 5, 6, 6)
+x2 = c (7, 7, 8, 8, 9, 9, 9, 10, 10, 10, 11, 11, 11, 11, 11, 12, 12, 12, 12)
+x = rep (c (x1, x2, x1 + 12), 20)
+x = x + runif (length (x), -1, 1) - 0.5
+x = x [x > 0 & x < 18]
+x = crtv (x, drtvs ("2007-01-01"), "month")
 @
 
-Perhaps the most common operations are combining and extracting. When combining rtv objects the return type will match the type of the first argument.
-
 <<>>=
-timestring (c (x [1:5], crtv (0) ) )
+#first 5 and last 5
+n = length (x)
+drtvf (sort (x) [c (1:5, (n-4):n)], FALSE)
 @
 
-We can also sample and sort.
-<<>>=
-y = x [sample (1:20, 10)]
-timestring (y)
-y = sort (y)
-timestring (y)
+\noindent Let's say that we are interested in the variable's distribution, with respect to monthly units. Perhaps the most intuitive way to visualise the distribution, and perhaps the easiest to interpret, might be a barplot.
+\begin {center}
+<<fig=true, width=6, height=3>>=
+u = floor (x) + 1
+k = table (u)
+barplot (k, names=names (k), col=rgb (0.65, 0.8, 0.65) )
+@
+\end {center}
+
+\noindent That's kind of ugly, perhaps a more beautiful version...
+\begin {center}
+<<fig=true, width=6, height=3>>=
+labs = formatmonth (c (1:12, 1:6), nchars=1)
+barplot (k, names=labs, xaxs="i", col=rgb (0.65, 0.8, 0.65),
+	xlim=c (0, 18), ylim= c (0, 100), width=0.8, space=0.25)
+abline (v=12.1, lty=2)
+text (c (0.5, 12.5), c (90, 90),
+	c ("2007 (whole year)", "2008 (1st 6 months)"), adj=c (0, 0.5) )
+@
+\end {center}
+
+\noindent Alternatively, we can use the default plot, which produces a plot of an ecdf (with a formatted time axis). Noting that convex segments imply increasing frequencies, and concave segments imply decreasing frequencies.
+\begin {center}
+<<fig=true, width=5.5, height=3>>=
+plot (x, ylab="F(x)")
+abline (v=12, lty=2)
+@
+\end {center}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Section
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\msec {Irregular Timeseries}
+
+Lets say we have another random time variable with realisations $\mathbf {x}$ and some other random response variable with realisations $\mathbf {y}$. Lets say that the $\mathbf {x}$ values span five days, and the $\mathbf {y}$ values, well doesn't matter. Note that the third argument in the plot function, is the positions of the tick marks.
+<<echo=false>>=
+x = (1:75)
+x = x / 15 + runif (75, -0.25, 0.25)
+x = x [x > 0 & x < 5]
+x = sort (x)
+x = crtv (x, drtvs ("2010-04-05") )
+y = rep (-1, length (x) )
+z = x - floor (x)
+y [z > 0.25 & z < (17/28)] = 1
+y = y + runif (length (y), -1.2, 1.2)
 @
 
-Perform a variety of mathematical operations:
 <<>>=
+#first 5 and last 5
+n = length (x)
+drtvf (sort (x) [c (1:5, (n-4):n)], FALSE)
+@
+
+\begin {center}
+<<fig=true, width=5.5, height=3>>=
+plot (x, y, at=(0:4) + 0.5)
+abline (v=1:4, col="grey20", lty=3)
+@
+\end {center}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Section
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\msec {Cyclic Timeseries}
+
+Here cycle refers to any repeating process, and specifically in the context of functions of rtv objects, a function that repeats (or tends to repeat) itself over one of the crtv units. Using the previous example, we can examine a daily cycle:
+\begin {center}
+<<fig=true, width=5.5, height=3>>=
+plot (x, y, cycle="day")
+@
+\end {center}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Section
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\msec {Manipulating rtv Objects}
+
+Some examples (many of which are only defined for crtv objects):
+<<>>=
+seed = c ("2008-01-01", "2008-01-04", "2008-01-03", "2008-01-02")
+x = crtv (seed, seed [1], "hour")
+x 
+@
+
+<<>>=
+length (x)
+formatdow (drtv (x [1])$dow)
+c (x, x)
+rep (x, 4)
+sort (x)
+order (x)
 mean (x)
-range (x)
 min (x)
 max (x)
+range (x)
+round (x)
+x [2]
+x + 24
 @
-
-Also note the effect of missing values.
-<<>>=
-z = x
-z [10] = NA
-mean (z)
-mean (z, na.rm=TRUE)
-@
-
-One exception to the rule of returning an rtv object is length (which returns the same value regards of whether the object is drtv or crtv). Another is diff.
-<<>>=
-length (as.drtv (x) )
-length (as.crtv (x) )
-diff (x)
-@
-
-We may also wish to add or subtract numeric values from rtv objects. Noting that adding an rtv object to another rtv object is not permitted.
-
-The core function is rtv.incr, which allows us to choose units. If unit is not specified then the default unit (e.g. day) is used for drtv objects and the same unit for crtv objects.
-<<>>=
-z = x [1:4]
-@
-
-<<>>=
-timestring (rtv.incr (z, 5) )
-timestring (rtv.incr (drtv (z), 5) )
-@
-
-<<>>=
-timestring (rtv.incr (z, 1, "year") )
-timestring (rtv.incr (crtv (z, unit="year"), 1) )
-@
-
-In general it is easier to work with expressions of the form $a + b$.
-<<>>=
-timestring (z + 1)
-timestring (1 + z)
-timestring (z - 1)
-@
-
-We can use the timeseq function if we wish to create sequences of (always crtv) time values. The first argument is an rtv object of length one or two. If the length is one, a second rtv object is required (of length one). The two values give the minimum and maximum values of the sequence. A third argument gives the number of points. Further arguments can also be used to specify the origin and unit of the resulting crtv object.
-
-<<>>=
-timeseq (range (x), n=5)
-timeseq (min (x), max (x), 5, unit="month")
-@
-
-Equivalently, for the first sequence.
-<<>>=
-min (x) + (0:4) * 19/4
-@
-
-It is also possible to create sequences using other objects and coerce the result to an rtv object. However the above approaches are recommended.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Section
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section {Simulation and Exploratory Data Analysis}
+\msec {Calendar Operations}
 
-Sometimes we may wish to simulate a time sample. The exact process for creating an rtv object with simulated realisations will depend on the distribution. Two examples are given. One for a uniform distribution and one for a normal distribution. We can also create exploratory plots. The following examples plot the ecdf over time.
-
-\begin {center}
+The following functions mainly exist as support functions, both for manipulating time values, and for formatting them. They're reasonably self-explanatory. Note that they are vectorised.
 <<>>=
-#realisations from a uniform random time variable
-bound = crtv (c ("2000-01-01", "2001-01-01") )
-x1 = bound [1] + range (bound, diff=TRUE) * runif (250)
-@
-<<fig=true,width=8,height=6e>>=
-plot (x1)
-@
-
-Simulated realisations from a uniform random time variable.
-\end {center}
-
-\begin {center}
-<<>>=
-#realisations from a normal random time variable
-mu = crtv ("2004-06-01")
-x2 = mu + rnorm (250, sd=10)
-@
-<<fig=true,width=8,height=6>>=
-plot (x2)
-@
-
-Simulated realisations from a normal random time variable.
-\end {center}
-
-We may also wish to produce a lineplot over time (not to be confused with a traditional timeseries plot). Remember that time here is random. The default behaviour of the plot is to sort the realisations.
-
-\begin {center}
-<<>>=
-y = rexp (length (x1), 0.005)
-@
-<<fig=true,width=8,height=6>>=
-plot (x1, y)
-@
-
-Another simulation.
-\end {center}
-
-Presently the functions for plotting rtv objects are incomplete (noting the error on the axis labels above, x instead of x1). There are also dot plots via timeplot.dot or timeplot.group and an experimental function timeplot.multicycle.
-
-I am currently looking a suitable \textit {non-confidential} dataset to (hopefully) include as an example in the next release. Here is a meaningless example (although it demonstrates what the function can do).
-
-\begin {center}
-<<>>=
-#try to make things more interesting...
-x1 = x1 * 4
-y = y + 1000 * sin (2 * pi * rtv.cp (x1, "week") )
-y = y + 500 * sin (2 * pi * rtv.cp (x1, "day") )
-@
-<<fig=true,width=8,height=6>>=
-timeplot.multicycle (x1, y)
-@
-\end {center}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%Section
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section {Options}
-
-The rtv package sets a number of options. These can be changed by the user. However if the user wishes to change any rtv options, it is advisable that they do this pior to any other rtv operations. Also note that the options may change heavily in future rtv releases.
-
-Note that at present, very little testing has been done on changing the rtv options. 
-
-\begin {center}
-\begin {tabular}{|l|l|}
-\hline
-option & description \\
-\hline
-rtv.explicit.format & Format printed output as time strings. TRUE or FALSE.\\
-rtv.read.date & Use date format for character seeds. TRUE or FALSE.\\
-rtv.print.date & Use date format when printing. TRUE or FALSE.\\
-rtv.plot.date & Use date format when plotting. TRUE or FALSE.\\
-rtv.default.origin & A POSIXct object giving the default origin.\\
-rtv.default.unit & A character giving the default unit.\\
-rtv.default.format.short & Format string for date formats.\\
-rtv.default.format.long & Format string for date-tod formats.\\
-\hline
-\end {tabular}
-\end {center}
-
-Options can be reset, by calling rtv.reset.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%Section
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section {Calendar Operations}
-
-The following functions mainly exist as support functions for other functions given so far. However there are many situations when they may be useful in themselves.
-
-Most a self explanatory, so commentary will be kept to a minimum. Note that most are vectorised and apply the recycling rule when arguments are of different lengths.
-
-<<>>=
-year = 2000:2010
+year = 2001:2010
 is.leap (year)
+year [is.leap (year)]
 ndays.year (year)
 @
 
 <<>>=
 month = 1:12
-ndays.month (2000, month)
-cumdays.month (2000, month)
+ndays.month (2007, month)
+ndays.month (2008, month)
 @
 
 <<>>=
-date.to.dow (2000, 2, 1)
-date.to.doy (2000, 2, 1)
-doy.to.date (2000, 32)
-@
-
-We can also format the month or the day of the week using the functions monthstring or dowstring. In both cases we can set the case by case=``lower'' or case=``upper'' (omitting or providing any other value results in title case). We can also set the number of letters by nletters = ...some value..., which by default is 3. Use NA for full names.
-
-<<>>=
-monthstring (month)
-monthstring (month, case="lower")
+date2dow (2010, 2, 1:10)
+date2doy (2010, 2, 1:10)
+doy2date (2010, 24:35)
 @
 
 <<>>=
 dow = 1:7
-dowstring (dow)
-dowstring (dow, case="upper", nletters=1)
-dowstring (dow, nletters=NA)
+formatdow (dow)
+formatdow (dow, case="upper", nchars=NA)
 @
+
+<<>>=
+formatmonth (month)
+formatmonth (month, case="lower")
+@
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Section
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\mapp {A}{Global Options}
+
+\noindent The rtv package uses several global options. They control the way that the rtv constructors interpret textual representations of time, they way that time is printed and formatted, and the default origin and unit. Following is a list of the options, along with their class, default value and description.
+\begin {center}
+\begin {tabular}{|l|l|l|l|}
+\hline
+Option & Cl & Default & Description \\
+\hline
+rtv.origin & D & ``2000-01-01 06:00:00'' &	Default origin.\\
+rtv.unit & C & ``day'' &					Default unit.\\
+\hline
+rtv.format & L & FALSE &					When printing rtv objects, call drtvf,\\&&& to produce highly formatted text.\\
+rtv.date & L & TRUE &				Should the rtv format method,\\&&& include the date only.\\
+\hline
+rtv.styled & C & ``\%Y-\%m-\%d'' &		For formatted text, that includes\\&&& the date only, the style of the text.\\
+rtv.stylex & C & ``\%Y-\%m-\%d \%H:\%M:\%OS'' &	For formatted text, that includes both\\&&& the date and the time of day, the style of text.\\
+\hline
+\end {tabular}
+\end {center}
+
+\noindent Where, Cl refers to class, D refers to drtv (noting the default value shown, is the formatted version), L refers to logical, and C refers to character. In addition to the options, are the following utility functions, to help set the options:
+<<eval=false>>=
+rtvo.reset ()
+rtvo.format (format=FALSE)
+rtvo.date (date=FALSE)
+@
+
+\noindent The first, resets all the options to their defaults, the others set the corresponding options.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Section
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\mapp {B}{Monthly and Yearly Values}
+
+\noindent Given a crtv value in days, deriving the equivalent value in weeks or seconds is trivial. However, deriving the equivalent value in months or years requires careful consideration. Here, rather than assume that a month or a year, corresponds to some constant and approximate number of days, we regard one month as the amount of time required from the $k$th day of the $x$th month, to the same $k$th day of the $(x+1)$th month. e.g. Jan 1st and Feb 1st (of the same year), are exactly one month apart. The same principle applies to years.
+
+Using fresh notation, assuming that we can create a drtv object $x$ for some time values and another drtv object $k$ for some origin, then the number of months $\textrm {d}_m$ and the number of years $\textrm {d}_y$, can be computed as follows:
+\begin {eqnarray*}
+	\textrm {d}_y (x | k) &=& \textrm {f}_y (x) - \textrm {f}_y (k) \\
+	\textrm {d}_m (x | k) &=& \textrm {f}_m (x) - \textrm {f}_m (k)
+\end {eqnarray*}
+
+\noindent Where:
+\begin {eqnarray*}
+	\textrm {f}_y (\bullet) &=& year + (doy + \textrm {f} _ d (\bullet) - 1) / n_{year}\\
+	\textrm {f}_m (\bullet) &=& (12)(year) + month + (day + \textrm {f} _{d} (\bullet) - 1) / n_{month}\\
+	\textrm {f}_d (\bullet) &=& hour/24 + minute/1440 + second/86400
+\end {eqnarray*}
+
+\noindent and where,
+\begin {itemize}
+	\item [$\bullet$] Is a drtv object.
+	\item [$n_{year}$] Is the number of days in the given years.
+	\item [$n_{month}$] Is the number of days in the given months.
+\end {itemize}
+
+\noindent Noting that $\bullet$ has been used as shorthand notation. Where $\bullet$ has been used as a function's argument to represent a drtv object, the object's attributes \{year, month, day, hour, minute, second, dow, doy\}, have also been regarded as arguments.
+
+We can produce inverses for these functions however they're messy. The reader can refer the source files if interested.
 
 \end{document}
 

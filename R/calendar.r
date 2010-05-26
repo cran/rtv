@@ -25,7 +25,50 @@ ndays.month = function (year, month)
 	y
 }
 
-cumdays.month = function (year, month, inclusive=TRUE)
+date2dow = function (year, month, day)
+{	dow = strptime (paste (year, month, day, "6"), "%Y %m %d %H", tz="GMT")$wday
+	dow [dow == 0] = 7
+	dow
+}
+
+date2doy = function (year, month, day)
+	.cumdays.month (year, month, FALSE) + day
+
+doy2date = function (year, doy)
+{	d = cbind (year, doy)
+	n = nrow (d)
+	month = day = numeric (n)
+	for (i in 1:n)
+	{	ndays = cumsum (c (0, ndays.month (d [i, 1], 1:11) ) )
+		month [i] = sum (ndays < d [i, 2])
+		day [i] = d [i, 2] - ndays [month [i] ]
+	}
+	list (month=month, day=day)
+}
+
+formatmonth = function (x, ...)
+{	mn = c ("January", "February", "March", "April",
+		"May", "June", "July", "August",
+		"September", "October", "November", "December")
+	if (is.rtv (x) ) x = drtv (x)$month
+	formatdtu (x, mn, ...)
+}
+
+formatdow = function (x, ...)
+{	dn = c ("Monday", "Tuesday", "Wednesday", "Thursday",
+		"Friday", "Saturday", "Sunday")
+	if (is.rtv (x) ) x = drtv (x)$dow
+	formatdtu (x, dn, ...)
+}
+
+formatdtu = function (x, levels, case="title", nchars=3)
+{	if (case == "lower") levels = tolower (levels)
+	else if (case == "upper") levels = toupper (levels)
+	if (!is.na (nchars) ) levels = substr (levels, 1, nchars)
+	levels [x]
+}
+
+.cumdays.month = function (year, month, inclusive=TRUE)
 {	d = cbind (year, month)
 	n = nrow (d)
 	y = rep (NA, n)
@@ -36,28 +79,5 @@ cumdays.month = function (year, month, inclusive=TRUE)
 			y [i] = sum (ndays [1:d [i, 2] ])
 		}
 	y
-}
-
-date.to.dow = function (year, month, day)
-	dow.correction (strptime (paste (year, month, day), "%Y %m %d", tz="GMT")$wday)
-
-dow.correction = function (dow)
-{	dow [dow == 0] = 7
-	dow
-}
-
-date.to.doy = function (year, month, day)
-	cumdays.month (year, month, FALSE) + day
-
-doy.to.date = function (year, doy)
-{	d = cbind (year, doy)
-	n = nrow (d)
-	month = day = numeric (n)
-	for (i in 1:n)
-	{	ndays = cumsum (c (0, ndays.month (d [i, 1], 1:11) ) )
-		month [i] = sum (ndays < d [i, 2])
-		day [i] = d [i, 2] - ndays [month [i] ]
-	}
-	list (month=month, day=day)
 }
 
