@@ -13,9 +13,9 @@ par(mar=c(2, 4, 0.5, 4),las=1,cex=0.75)
 library (rtv)
 @
 
-\mtitle {rtv}{0.4.0}{Random Time Variables}
+\mtitle {rtv}{0.4.1}{Random Time Variables}
 
-\mabstract{This vignette, introduces the rtv package, an R package for conveniently representing, manipulating and visualising time data. Here, time is regarded as a random variable, and rtv objects are used to represent realisations of that random variable. This is particularly useful for modelling change points, irregular timeseries and failure events. Here, rtv objects (which are defined by an abstract class and two subclasses) are similar to R's POSIXt objects. However rtv objects use/allow: (1) strong constructor overloading; (2) continuous representations of time, with user-specified origins and units (i.e. the number of days, weeks or years, since some reference event, possibly  the first event in series of events); and (3) weaker formatting.}
+\mabstract{This vignette introduces the rtv package, an R package for conveniently representing, manipulating and visualising time data. Here, time is regarded as a random variable, and rtv objects are used to represent realisations of that random variable. This is particularly useful for modelling change points, irregular timeseries and failure events. Here, rtv objects (which are defined by an abstract class and two subclasses) are similar to R's POSIXt objects. However, rtv objects use/allow: (1) strong constructor overloading; (2) continuous representations of time, with user-specified origins and units (i.e. the number of days, weeks or years, since some reference event, possibly  the first event in series of events); and (3) weaker formatting.}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Section
@@ -27,7 +27,7 @@ For modelling purposes, most time variables (and time values) can be classified 
 \begin {itemize}
 	\item \textbf {Timestamps and Formatted Text} \\[0.14cm] Whilst there are different ways of representing timestamps, they're generally presented to the user as formatted text (e.g. ``2004-04-18 10:05:27''). In general, timestamps contain both the date and the time of day, hence they tell us exactly when something happened.
 
-	\item \textbf {Timeseries} \\[0.14cm] In principle, a timeseries represents a series of time values, where each time value maps to some response value. Whilst many timeseries models partly ignore time values by regarding them as natural numbers, denoting the ith response or error value, time values are important for interpreting models in practice. They are also important for modelling irregular timeseries. 
+	\item \textbf {Timeseries} \\[0.14cm] In principle, a timeseries represents a series of time values, where each time value maps to some response value. Whilst many timeseries models partly ignore time values by regarding them as natural numbers, corresponding the ith response or error value, time values are important for interpreting models in practice. They're also important for modelling irregular timeseries. 
 
 	\item \textbf {Waiting Times} \\[0.14cm] With waiting times, often we are interested in expected waiting times, expected incidence rates, or perhaps the probability that a certain event will happen within a certain time period.
 \end {itemize}
@@ -394,7 +394,7 @@ rtvo.date (date=FALSE)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \mapp {B}{Monthly and Yearly Values}
 
-\noindent Given a crtv value in days, deriving the equivalent value in weeks or seconds is trivial. However, deriving the equivalent value in months or years requires careful consideration. Here, rather than assume that a month or a year, corresponds to some constant and approximate number of days, we regard one month as the amount of time required from the $k$th day of the $x$th month, to the same $k$th day of the $(x+1)$th month. e.g. Jan 1st and Feb 1st (of the same year), are exactly one month apart. The same principle applies to years.
+\noindent Given a crtv value in days, deriving the equivalent value in weeks or seconds is trivial. However, deriving the equivalent value in months or years requires careful consideration. Here, rather than assume that a month or a year, corresponds to some constant and approximate number of days, we regard one month as the amount of time required from the $k/n$ fraction of the $x$th month, to the same $k/n$ fraction of the $(x+1)$th month, where $k$ is the $k$th day of the $x$th month and $n$ is the number of days in the $x$th month e.g. For midnight, January 1st and February 1st are exactly one month apart. However, for 6 am (the default), they're slightly more than one month apart. It may be helpful to think about corresponding fractions, $1/4/31 < 1/4/28$ (or 29).
 
 Using fresh notation, assuming that we can create a drtv object $x$ for some time values and another drtv object $k$ for some origin, then the number of months $\textrm {d}_m$ and the number of years $\textrm {d}_y$, can be computed as follows:
 \begin {eqnarray*}
