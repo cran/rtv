@@ -60,12 +60,6 @@ as.character.drtv = function (x, ...) format (x, ...)
 length.drtv = function (x, ...) length (x [[1]])
 length.crtv = function (x, ...) length (unclass (x) )
 
-as.data.frame.rtv = function (x, ...)
-{	y = list (extend (x, "AsIs") )
-	attr (y, "row.names") = 1:length (y)
-	y
-}
-
 crtvcp = function (x)
 {	y = as.numeric (x)
 	y - floor (y)
@@ -100,4 +94,5 @@ order.crtv = function (x, by.unit=x$unit, by.cp=FALSE, ...)
 	attributes (y) = attributes (x)
 	y
 }
+
 

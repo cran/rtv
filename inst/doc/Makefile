@@ -1,21 +1,20 @@
-makerel:
-	make makedev
+default:
+	make -f make-ext
 	make clean
 
-makedev:
-	make rtv.pdf
+enhanced:
+	make -f make-ext bldcmd=makesweave
 
-rtv.pdf: rtv.tex maia2.sty
-	pdflatex rtv.tex
-
-rtv.tex: rtv.rnw
-	R CMD Sweave rtv.rnw
+init:
+	rm -f /tmp/makesweavepipe
+	mkfifo /tmp/makesweavepipe
+	echo -e "0\n" > /tmp/makesweavestatus
+	makesweave -i &
 
 clean:
-	rm *.tex
-	rm *.aux
-	rm *.log
-	rm tmp*
-	rm Rplots*
-
+	rm -f *.tex
+	rm -f *.aux
+	rm -f *.log
+	rm -f tmp*
+	rm -f Rplots*
 

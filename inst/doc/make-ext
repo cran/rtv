@@ -1,0 +1,10 @@
+bldcmd=R CMD Sweave
+
+rtv.pdf: rtv.tex maia2.sty
+	pdflatex rtv.tex
+
+rtv.tex: rtv.rnw
+	$(bldcmd) rtv.rnw
+
+
+
