@@ -44,7 +44,7 @@ drtv.default = function (year=2000, month=1, day=1, hour=6, minute=0, second=0,
 	dow=1, doy=1, ..., validate=TRUE, round=FALSE)
 {	x = data.frame (year, month, day, hour, minute, second, dow, doy)
 	if (validate) for (i in 1:nrow (x) ) if (any (is.na (x [i,]) ) ) x [i,] = NA
-	x = extend (as.list (x), c ("drtv", "rtv") )
+	x = extend (extend (as.list (x), "rtv"), "drtv")
 	if (round) x = .round.drtv (x)
 	if (validate)
 	{	x$dow = date2dow (x$year, x$month, x$day)
@@ -110,6 +110,7 @@ rep.drtv = function (x, times, ...)
 	xfrac = x - xint
 	list (xint, xfrac)
 }
+
 
 
 

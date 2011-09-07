@@ -1,7 +1,7 @@
 Package: rtv
 Title: Random Time Variables
-Version: 0.4.2
-Date: 2011-05-23
+Version: 0.4.3
+Date: 2011-09-07
 Author: Charlotte Maia
 Maintainer: Charlotte Maia <maiagx@gmail.com>
 Description: A package for conveniently representing, manipulating and
@@ -12,8 +12,8 @@ Description: A package for conveniently representing, manipulating and
         strong emphasis on continuous representations of time, with
         user-specified origins and units.
 License: GPL (>= 2)
-Depends: s3x
+Depends: s3x (>= 0.2.0)
 Suggests: mecdf
-Packaged: 2011-05-23 04:28:28 UTC; maia
+Packaged: 2011-09-07 02:38:09 UTC; maia
 Repository: CRAN
-Date/Publication: 2011-05-25 06:52:19
+Date/Publication: 2011-09-13 04:40:08

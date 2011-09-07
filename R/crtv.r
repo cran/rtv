@@ -50,7 +50,7 @@ crtv.character = function (x, origin, unit, ..., date=TRUE, hour=6, style)
 crtv.default = function (x, origin, unit, ...)
 {	if (missing (origin) ) origin=getOption ("rtv.origin")
 	if (missing (unit) ) unit=getOption ("rtv.unit")
-	extend (REALv (x), c ("crtv", "rtv"), origin, unit)
+	extend (extend (VECTOR (x), "rtv"), "crtv", origin, unit)
 }
 
 is.crtv = function (x) inherits (x, "crtv")
@@ -112,7 +112,4 @@ seq.crtv = function (a, b, n, ...)
 }
 
 .oreq = function (k1, k2) drtvf (k1) == drtvf (k2)
-
-
-
 

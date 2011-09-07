@@ -13,7 +13,7 @@ par(mar=c(2, 4, 0.5, 4),las=1,cex=0.75)
 library (rtv)
 @
 
-\mtitle {rtv}{0.4.2}{Random Time Variables}
+\mtitle {rtv}{0.4.3}{Random Time Variables}
 
 \mabstract{This vignette introduces the rtv package, an R package for conveniently representing, manipulating and visualising time data. Here, time is regarded as a random variable, and rtv objects are used to represent realisations of that random variable. This is particularly useful for modelling change points, irregular timeseries and failure events. Here, rtv objects (which are defined by an abstract class and two subclasses) are similar to R's POSIXt objects. However, rtv objects use/allow: (1) strong constructor overloading; (2) continuous representations of time, with user-specified origins and units (i.e. the number of days, weeks or years, since some reference event, possibly  the first event in series of events); and (3) weaker formatting.}
 
@@ -355,6 +355,16 @@ formatdow (dow, case="upper", nchars=NA)
 <<>>=
 formatmonth (month)
 formatmonth (month, case="lower")
+@
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Section
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\msec {Known Issues}
+
+Recently, an error was detected with month units. It should be corrected in the near future. The following should be integer valued.
+<<>>=
+crtv (c ("2011-01-01", "2011-02-01", "2011-03-01", "2011-04-01"), unit="month")
 @
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
